@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby Monitor</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fef8f2;
+            color: #444;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        h2 {
+            color: #6c5b7b;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        img {
+            width: 480px;
+            max-width: 90%;
+            height: 360px;
+            border-radius: 12px;
+            border: 2px solid #d3c0f0;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            background-color: #e8eaf6;
+            margin-bottom: 20px;
+            object-fit: cover;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #c1e1c1;
+            color: #444;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #b0d9b0;
+            transform: translateY(-2px);
+        }
+
+        #alertText {
+            color: #c94c4c;
+            font-weight: bold;
+            margin-top: 10px;
+            min-height: 20px;
+        }
+
+        .recorder-container {
+            background-color: #fffdf8;
+            padding: 30px 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 15px;
+            color: #6c5b7b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: #4e3c5c;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Baby Monitor</h2>
+    <audio id="audioPlayer" autoplay style="display: none;">
+        <source src="/audio_feed" type="audio/wav">
+    </audio>
+    <div class="recorder-container">
+        <img id="videoFeed" src="/video_feed" alt="Live Camera Feed">
+
+        <div class="controls">
+            <button onclick="sendCommand('/toggle_camera')">Turn Camera On/Off</button>
+            <button onclick="toggleAudio()">Mute/Unmute Mic</button>
+            <button onclick="sendCommand('/start_monitoring')">Start Monitoring</button>
+            <button onclick="sendCommand('/stop_monitoring')">Stop Monitoring</button>
+            <button onclick="window.location.href='/recordings'">View Recordings</button>
+        </div>
+
+        <div id="alertText"></div>
+
+        <div class="controls">
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+        </div>
+    </div>
+
+    <script>
+        const alertText = document.getElementById('alertText');
+        const audio = document.getElementById('audioPlayer');
+
+        let isAudioPlaying = true;
+
+        function sendCommand(route) {
+            return fetch(route, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alertText.textContent = data.message;
+                    return data;
+                })
+                .catch(error => {
+                    console.error(error);
+                    alertText.textContent = "Error communicating with server.";
+                });
+        }
+
+        function toggleAudio() {
+            sendCommand('/toggle_audio').then(() => {
+
+                if (isAudioPlaying) {
+                    // 🔇 Pause stream
+                    audio.pause();
+                    audio.src = "";   // 🔥 VERY IMPORTANT: stop network stream
+                    isAudioPlaying = false;
+                } else {
+                    // 🔊 Resume stream
+                    audio.src = "/audio_feed" + new Date().getTime();
+                    audio.load();
+                    audio.play().catch(() => {});
+                    isAudioPlaying = true;
+                }
+
+            });
+        }
+
+        // Autoplay handling
+        audio.muted = false;
+
+        audio.play().catch(() => {
+            console.log("Autoplay blocked. Click button to start audio.");
+        });
+
+    </script>
+</body>
+
+</html>

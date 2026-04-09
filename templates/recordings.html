@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recorded Audio Files</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fef8f2;
+            color: #444;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            background-color: #fffdf8;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            text-align: center;
+            color: #6c5b7b;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        th, td {
+            padding: 14px 18px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #d3c0f0;
+            color: #444;
+        }
+
+        tr:nth-child(even) {
+            background-color: #faf6ff;
+        }
+
+        tr:hover {
+            background-color: #f3ecff;
+        }
+
+        .status {
+            font-weight: bold;
+            color: #c94c4c;
+        }
+
+        .download-btn {
+            background-color: #c1e1c1;
+            color: #444;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .download-btn:hover {
+            background-color: #b0d9b0;
+        }
+
+        .no-files {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #888;
+            margin-top: 20px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 25px;
+            color: #6c5b7b;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: #4e3c5c;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Recorded Audio Files</h2>
+
+        {% if files %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Audio Filename</th>
+                    <th>Baby Crying Status</th>
+                    <th>Confidence of Crying</th>
+                    <th>Confidence of Not Crying</th>
+                    <th>Download</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in files %}
+                <tr>
+                    <td>{{ file.filename }}</td>
+                    <td class="status">{{ file.status }}</td>
+                    <td>{{ "%.4f" | format(file.confidence.Cry) }}</td>
+                    <td>{{ "%.4f" | format(file.confidence.Non_Cry) }}</td>
+                    <td>
+                        <a class="download-btn" href="{{ url_for('recordings.download_recording', filename=file.filename) }}">
+                            Download
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-files">No recordings available.</div>
+        {% endif %}
+
+        <div style="text-align:center;">
+            <a class="back-link" href="/user">← Back to Baby Monitor</a>
+        </div>
+    </div>
+</body>
+
+</html>
