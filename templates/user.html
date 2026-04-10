@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Baby Monitor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -22,16 +23,37 @@
             text-align: center;
         }
 
-        img {
-            width: 480px;
-            max-width: 90%;
-            height: 360px;
-            border-radius: 12px;
-            border: 2px solid #d3c0f0;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-            background-color: #e8eaf6;
-            margin-bottom: 20px;
-            object-fit: cover;
+        .video-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .record-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255,255,255,0.85);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #c94c4c;
+        }
+
+        /* blinking dot */
+        .record-indicator::before {
+            content: "● ";
+            color: red;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.2; }
+            100% { opacity: 1; }
+        }
+
+        .hidden {
+            display: none;
         }
 
         .controls {
@@ -88,23 +110,68 @@
         a:hover {
             color: #4e3c5c;
         }
+        .icons i {
+        font-size: 26px;
+        padding: 15px;
+        border-radius: 50%;
+        background-color: #c1e1c1;
+        color: #444;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .icons i:hover {
+        background-color: #b0d9b0;
+        transform: translateY(-2px);
+    }
+
+    /* Active states */
+    .icons i.off {
+        background-color: #f8caca;
+        color: #a33;
+    }
+
+    .icons i.active {
+        background-color: #c1e1c1;
+    }
     </style>
+
+    <script>
+        sendCommand('/get_audio_status').then(() => {
+                const btn = document.getElementById('cameraBtn');
+
+                btn.classList.toggle('off');
+
+                // Change icon
+                if (btn.classList.contains('off')) {
+                    btn.classList.remove('fa-video');
+                    btn.classList.add('fa-video-slash');
+                } else {
+                    btn.classList.remove('fa-video-slash');
+                    btn.classList.add('fa-video');
+                }
+            });
+    </script>
 </head>
 
 <body>
     <h2>Baby Monitor</h2>
-    <audio id="audioPlayer" autoplay style="display: none;">
+    <audio id="audioPlayer" style="display: none;"></audio>
         <source src="/audio_feed" type="audio/wav">
     </audio>
     <div class="recorder-container">
-        <img id="videoFeed" src="/video_feed" alt="Live Camera Feed">
+        <div class="video-wrapper">
+            <div id="recordIndicator" class="record-indicator hidden">REC</div>
+            <img id="videoFeed" src="/video_feed" alt="Live Camera Feed">
+        </div>
 
-        <div class="controls">
-            <button onclick="sendCommand('/toggle_camera')">Turn Camera On/Off</button>
-            <button onclick="toggleAudio()">Mute/Unmute Mic</button>
-            <button onclick="sendCommand('/start_monitoring')">Start Monitoring</button>
-            <button onclick="sendCommand('/stop_monitoring')">Stop Monitoring</button>
-            <button onclick="window.location.href='/recordings'">View Recordings</button>
+        <div class="controls icons">
+            <i id="cameraBtn" class="fas fa-video" onclick="toggleCamera()"></i>
+            <i id="audioBtn" class="fas fa-microphone" onclick="toggleAudio()"></i>
+            <i class="fas fa-play" onclick="startMonitoring()"></i>
+            <i class="fas fa-stop" onclick="stopMonitoring()"></i>
+            <i class="fas fa-folder-open" onclick="window.location.href='/recordings'"></i>
         </div>
 
         <div id="alertText"></div>
@@ -118,7 +185,7 @@
         const alertText = document.getElementById('alertText');
         const audio = document.getElementById('audioPlayer');
 
-        let isAudioPlaying = true;
+        let isAudioPlaying = false;
 
         function sendCommand(route) {
             return fetch(route, { method: 'POST' })
@@ -133,20 +200,53 @@
                 });
         }
 
+        function toggleCamera() {
+            const video = document.getElementById('videoFeed');
+            const btn = document.getElementById('cameraBtn');
+
+            sendCommand('/toggle_camera').then(() => {
+
+                if (btn.classList.contains('off')) {
+                    // TURN ON
+                    video.src = "/video_feed?" + new Date().getTime();
+
+                    btn.classList.remove('off');
+                    btn.classList.remove('fa-video-slash');
+                    btn.classList.add('fa-video');
+                } else {
+                    // TURN OFF
+                    video.src = "/video_feed";   // 🔥 stops stream
+
+                    btn.classList.add('off');
+                    btn.classList.remove('fa-video');
+                    btn.classList.add('fa-video-slash');
+                }
+            });
+        }
+
         function toggleAudio() {
             sendCommand('/toggle_audio').then(() => {
 
+                const btn = document.getElementById('audioBtn');
+
                 if (isAudioPlaying) {
-                    // 🔇 Pause stream
                     audio.pause();
-                    audio.src = "";   // 🔥 VERY IMPORTANT: stop network stream
+                    audio.src = "";
                     isAudioPlaying = false;
+
+                    btn.classList.add('off');
+                    btn.classList.remove('fa-microphone');
+                    btn.classList.add('fa-microphone-slash');
+
                 } else {
-                    // 🔊 Resume stream
-                    audio.src = "/audio_feed" + new Date().getTime();
+                    audio.src = "/audio_feed?" + new Date().getTime();
                     audio.load();
                     audio.play().catch(() => {});
                     isAudioPlaying = true;
+
+                    btn.classList.remove('off');
+                    btn.classList.remove('fa-microphone-slash');
+                    btn.classList.add('fa-microphone');
                 }
 
             });
@@ -159,6 +259,34 @@
             console.log("Autoplay blocked. Click button to start audio.");
         });
 
+
+        const recordIndicator = document.getElementById('recordIndicator');
+
+        function startMonitoring() {
+            sendCommand('/start_monitoring').then(() => {
+                recordIndicator.classList.remove('hidden');
+            });
+        }
+
+        function stopMonitoring() {
+            sendCommand('/stop_monitoring').then(() => {
+                recordIndicator.classList.add('hidden');
+            });
+        }
+
+        window.onload = function () {
+            const cameraBtn = document.getElementById('cameraBtn');
+            const audioBtn = document.getElementById('audioBtn');
+
+            // Set both OFF visually
+            cameraBtn.classList.add('off');
+            cameraBtn.classList.remove('fa-video');
+            cameraBtn.classList.add('fa-video-slash');
+
+            audioBtn.classList.add('off');
+            audioBtn.classList.remove('fa-microphone');
+            audioBtn.classList.add('fa-microphone-slash');
+        };
     </script>
 </body>
 

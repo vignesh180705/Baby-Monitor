@@ -5,7 +5,7 @@ import time
 import os
 from datetime import datetime
 
-audio_on = True
+audio_on = False
 monitoring = False
 recording_thread = None
 mic_mode = "idle"
@@ -111,7 +111,7 @@ def generate_audio_stream(samplerate=44100, blocksize=1024):
     yield wav_header()
 
     try:
-        while mic_mode == "stream":
+        while mic_mode == "stream" and audio_on:
             data = q.get()
             yield data.tobytes()
     except GeneratorExit:
@@ -119,5 +119,4 @@ def generate_audio_stream(samplerate=44100, blocksize=1024):
     finally:
         stream.stop()
         stream.close()
-        if mic_mode == "stream":
-            mic_mode = "idle"
+        mic_mode = "idle"
