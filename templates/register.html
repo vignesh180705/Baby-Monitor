@@ -3,19 +3,47 @@
 <head>
     <title>Register</title>
     <style>
-        /* Page style */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #fef8f2; /* soft cream */
+            background-color: #fef8f2;
             color: #444;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
             margin: 0;
         }
 
+        /* Navbar */
+        .navbar {
+            width: 98%;
+            background-color: #fffdf8;
+            padding: 0px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .navbar h1 a {
+            color: #6c5b7b;
+            font-size: 1.5rem;
+            text-decoration: none;
+        }
+
+        .nav-links a {
+            margin-left: 20px;
+            text-decoration: none;
+            color: #6c5b7b;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: #4e3c5c;
+        }
+
+        .main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 70px); /* adjust for navbar */
+        }
         /* Card container */
         .register-container {
             background-color: #fffdf8;
@@ -77,29 +105,36 @@
         }
     </style>
 </head>
-<body>
+    <body>
+        <div class="navbar">
+            <h1><a href="/">Baby Monitor</a></h1>
+            <div class="nav-links">
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            </div>
+        </div>
+        <div class="main">
+            <div class="register-container">
+                
+                <h2>Register</h2>
+                <form method="POST" action="/register">
+                    <input type="text" name="name" placeholder="Name" required><br>
+                    
+                    <input type="email" name="email" placeholder="Email" required><br>
+                    
+                    <input type="password" name="password" placeholder="Password" required><br>
 
-<div class="register-container">
-    <h2>Register</h2>
+                    <button type="submit">Register</button>
+                </form>
 
-    <form method="POST" action="/register">
-        <input type="text" name="name" placeholder="Name" required><br>
-        
-        <input type="email" name="email" placeholder="Email" required><br>
-        
-        <input type="password" name="password" placeholder="Password" required><br>
+                <br>
 
-        <button type="submit">Register</button>
-    </form>
-
-    <br>
-
-    <a href="/login">Have an account? Login</a>
-    <br>
-    {% for msg in messages %}
-    <p style="color: green; font-weight: bold;">{{ msg }}</p>
-    {% endfor %}
-</div>
-
-</body>
+                <a href="/login">Have an account? Login</a>
+                <br>
+                {% for msg in messages %}
+                <p style="color: green; font-weight: bold;">{{ msg }}</p>
+                {% endfor %}
+            </div>
+        </div>
+    </body>
 </html>

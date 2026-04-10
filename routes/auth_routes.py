@@ -30,6 +30,10 @@ def register():
     flash("Registration successful! You can now login.")
     return redirect('/login')
 
+@auth.route('/', methods=['GET'])
+def main():
+    return render_template('homepage.html')
+
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
